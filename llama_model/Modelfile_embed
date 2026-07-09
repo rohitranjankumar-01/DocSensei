@@ -1,0 +1,2 @@
+FROM ./nomic-embed-text.gguf
+# Parameter configurations for Nomic Embed Text if any (none needed by default)
