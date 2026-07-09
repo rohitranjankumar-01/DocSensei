@@ -1,0 +1,22 @@
+# Environments
+venv/
+.venv/
+.git
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local Databases and Temp Stores
+chroma_db/
+temp_processing_store/
+
+# IDE configurations
+.vscode/
+.idea/
+
+
+# Large Model Files
+llama_model/*.gguf
