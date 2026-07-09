@@ -1,5 +1,4 @@
 import warnings
-
 # Suppress noisy runtime, cryptography, and deprecation warnings in terminal console logs
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -9,8 +8,6 @@ import os
 # Disable ChromaDB anonymized telemetry globally
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
-
-
 import streamlit as st
 from dotenv import load_dotenv
 import config
@@ -19,7 +16,100 @@ import vectorstore
 import llm_providers
 import prompts
 
+# Load environment variable configurations from .env
+load_dotenv()
 
+# Configure page settings
+st.set_page_config(
+    page_title="DocSensei", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom premium theme styling configurations
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .main-title {
+        font-family: 'Outfit', sans-serif;
+        background: linear-gradient(135deg, #FF4B4B 0%, #FF8F8F 50%, #4A90E2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-bottom: 0.2rem;
+        letter-spacing: -0.05rem;
+    }
+    
+    section[data-testid="stSidebar"] {
+        background-color: #0E121A !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .citation-badge {
+        display: inline-block;
+        background-color: rgba(74, 144, 226, 0.12);
+        color: #82B1FF;
+        padding: 0.25rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        margin-top: 0.4rem;
+        margin-right: 0.4rem;
+        border: 1px solid rgba(74, 144, 226, 0.2);
+    }
+
+    div[data-testid="stFileUploader"] {
+        background-color: rgba(20, 26, 40, 0.3);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Display main logo header
+st.markdown('<div class="main-title">DocSensei</div>', unsafe_allow_html=True)
+
+# Sidebar configurations panel
+st.sidebar.markdown("###Core Configuration")
+backend = st.sidebar.radio("Select Backend", ["API Mode", "Local Mode"])
+debug_mode = st.sidebar.checkbox("Show Performance Debugger Scores", value=False)
+
+# Fetch and validate Google API Key if Cloud Backend is active
+api_key = os.getenv("GOOGLE_API_KEY")
+if backend == "API Mode" and not api_key:
+    st.sidebar.error("GOOGLE_API_KEY environment variable is missing. Please set it in your .env file.")
+    st.stop()
+
+# Initialize session state variables
+if "indexed_backends" not in st.session_state:
+    st.session_state.indexed_backends = {}
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "active_backend" not in st.session_state:
+    st.session_state.active_backend = backend
+
+# Reset conversation session state if user toggles backend modes
+if st.session_state.active_backend != backend:
+    st.session_state.messages = []
+    st.session_state.active_backend = backend
+
+# Instantiate embeddings and generation pipelines
+with st.spinner("Initializing system runtime..."):
+    try:
+        if backend == "API Mode":
+            embeddings, llm = llm_providers.load_api_components(api_key)
+        else:
+            embeddings, llm = llm_providers.load_local_components()
+    except Exception as err:
+        st.error(str(err))
+        st.stop()
 
 # Main File Ingestion Uploader
 uploaded_file = st.file_uploader("Upload Class Lecture Notes (.pdf, .docx)", type=["pdf", "docx"])

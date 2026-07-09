@@ -12,3 +12,13 @@ CHUNK_OVERLAP = 30
 
 # --- Retrieval Settings ---
 RETRIEVAL_K = 4 
+
+# --- Distance Threshold Cutoffs (L2 Bounded Distance) ---
+THRESHOLD_LOCAL = 1.10  
+THRESHOLD_API = 0.75    
+
+# --- Active Model Name Specifications ---
+LOCAL_LLM = "doc-sensei-llama3.1"
+LOCAL_EMBED = "doc-sensei-nomic-embed-text"
+API_LLM = "gemini-2.5-flash"
+API_EMBED = "models/gemini-embedding-001"
