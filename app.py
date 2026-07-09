@@ -1,11 +1,24 @@
+import warnings
+
+# Suppress noisy runtime, cryptography, and deprecation warnings in terminal console logs
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+
 import os
+# Disable ChromaDB anonymized telemetry globally
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
+
+
 import streamlit as st
-from dotenv import lolad_dotenv
+from dotenv import load_dotenv
 import config
 import ingestion
 import vectorstore
 import llm_providers
 import prompts
+
 
 
 # Main File Ingestion Uploader
