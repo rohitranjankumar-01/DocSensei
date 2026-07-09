@@ -1,6 +1,8 @@
 # Environments
 venv/
 .venv/
+env/
+
 .git
 
 # Python cache and compiled files
@@ -17,6 +19,8 @@ temp_processing_store/
 .vscode/
 .idea/
 
+# Environment Variables
+.env
 
 # Large Model Files
 llama_model/*.gguf
