@@ -1,3 +1,5 @@
 FROM ./Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
 # Set custom system instructions if desired, or temperature parameters here.
 PARAMETER temperature 0.1
+PARAMETER num_gpu 99
+PARAMETER num_ctx 2048

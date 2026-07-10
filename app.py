@@ -5,8 +5,10 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
 import os
-# Disable ChromaDB anonymized telemetry globally
+import logging
+# Disable ChromaDB anonymized telemetry globally and silence its logger
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
+logging.getLogger("chromadb.telemetry.product.posthog").setLevel(logging.CRITICAL)
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -129,6 +131,12 @@ if uploaded_file:
             
         with st.spinner(f"Analyzing and indexing document for {backend}..."):
             try:
+                if backend == "Local Mode":
+                    import subprocess
+                    try:
+                        subprocess.run(["ollama", "stop", config.LOCAL_LLM], capture_output=True, text=True)
+                    except Exception:
+                        pass
                 chunks = ingestion.process_document(target_path)
                 v_store = vectorstore.get_vector_store(backend, embeddings)
                 v_store.add_documents(chunks)
@@ -194,6 +202,12 @@ if uploaded_file:
                 with st.chat_message("assistant"):
                     with st.spinner("Formulating grounded response..."):
                         try:
+                            if backend == "Local Mode":
+                                import subprocess
+                                try:
+                                    subprocess.run(["ollama", "stop", config.LOCAL_EMBED], capture_output=True, text=True)
+                                except Exception:
+                                    pass
                             raw_llm_response = llm.invoke(formatted_prompt)
                             final_text = getattr(raw_llm_response, 'content', str(raw_llm_response)).strip()
                             

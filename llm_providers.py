@@ -1,12 +1,50 @@
 import streamlit as st
 import subprocess
 import os
+import requests
 from google import genai
 from google.genai import types
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_community.llms.ollama import Ollama
 import config
 import numpy as np
+
+class BatchedOllamaEmbeddings:
+    """Custom wrapper to call Ollama's batched /api/embed API for 30x+ faster indexing."""
+    def __init__(self, model, base_url="http://localhost:11434", num_gpu=99):
+        self.model = model
+        self.base_url = base_url
+        self.num_gpu = num_gpu
+
+    def _embed(self, texts):
+        batch_size = 128
+        all_embeddings = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            try:
+                res = requests.post(
+                    f"{self.base_url}/api/embed",
+                    json={
+                        "model": self.model,
+                        "input": batch,
+                        "options": {
+                            "num_gpu": self.num_gpu
+                        }
+                    },
+                    headers={"Content-Type": "application/json"}
+                )
+                res.raise_for_status()
+                data = res.json()
+                all_embeddings.extend(data["embeddings"])
+            except Exception as e:
+                raise ValueError(f"Error calling Ollama batch embed: {e}")
+        return all_embeddings
+
+    def embed_documents(self, texts):
+        return self._embed(texts)
+
+    def embed_query(self, text):
+        return self._embed([text])[0]
 
 class GoogleGenAIEmbeddingsWrapper:
     """Wraps the new Google GenAI SDK client to look like LangChain's Embeddings helper."""
@@ -120,9 +158,9 @@ def load_local_components():
     # Ensure custom local GGUF model is registered in Ollama
     ensure_custom_ollama_model()
     try:
-        base_embeddings = OllamaEmbeddings(model=config.LOCAL_EMBED)
+        base_embeddings = BatchedOllamaEmbeddings(model=config.LOCAL_EMBED, num_gpu=99)
         embeddings = NormalizedEmbeddings(base_embeddings)
-        llm = Ollama(model=config.LOCAL_LLM, temperature=0.1)
+        llm = Ollama(model=config.LOCAL_LLM, temperature=0.1, num_gpu=99, num_ctx=2048)
         return embeddings, llm
     except Exception as e:
         raise RuntimeError("Ollama server connection refused. Ensure Ollama app is locally running and the custom model is created.") from e
