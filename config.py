@@ -20,5 +20,5 @@ THRESHOLD_API = 0.75
 # --- Active Model Name Specifications ---
 LOCAL_LLM = "doc-sensei-llama3.1"
 LOCAL_EMBED = "doc-sensei-nomic-embed-text"
-API_LLM = "gemini-2.5-flash"
+API_LLM = "gemini-3.1-flash-lite"
 API_EMBED = "models/gemini-embedding-001"
