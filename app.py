@@ -78,29 +78,58 @@ st.markdown("""
 # Display main logo header
 st.markdown('<div class="main-title">DocSensei</div>', unsafe_allow_html=True)
 
+# Initialize session state variables
+if "active_backend" not in st.session_state:
+    st.session_state.active_backend = "API Mode"
+if "indexed_backends" not in st.session_state:
+    st.session_state.indexed_backends = {}
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 # Sidebar configurations panel
 st.sidebar.markdown("###Core Configuration")
-backend = st.sidebar.radio("Select Backend", ["API Mode", "Local Mode"])
+
+# Match the radio to active_backend or let it update
+backend_options = ["API Mode", "Local Mode"]
+default_idx = backend_options.index(st.session_state.active_backend)
+
+if "backend_radio" not in st.session_state:
+    st.session_state.backend_radio = st.session_state.active_backend
+
+# Render radio using the key
+st.sidebar.radio("Select Backend", backend_options, index=default_idx, key="backend_radio")
 debug_mode = st.sidebar.checkbox("Show Performance Debugger Scores", value=False)
+
+# Backend switch confirmation logic
+if st.session_state.backend_radio != st.session_state.active_backend:
+    # Render confirmation controls in the sidebar directly under the radio select
+    st.sidebar.warning(f"⚠️ **Switch to {st.session_state.backend_radio}?**")
+    if st.session_state.backend_radio == "Local Mode":
+        st.sidebar.info("💡 **Local Mode** is only for use on your local PC. It requires Ollama to be running locally and will not function on the deployed Streamlit website.")
+    st.sidebar.write("This will clear active conversation history and require document re-indexing.")
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        if st.sidebar.button("Confirm", use_container_width=True):
+            st.session_state.active_backend = st.session_state.backend_radio
+            st.session_state.messages = []
+            st.rerun()
+    with col2:
+        if st.sidebar.button("Cancel", use_container_width=True):
+            # Reset radio button back to currently active backend
+            st.session_state.backend_radio = st.session_state.active_backend
+            st.rerun()
+
+# Set active backend for processing
+backend = st.session_state.active_backend
+
+if backend == "Local Mode":
+    st.sidebar.info("💡 **Local Mode Active:** Only for use on your local PC (requires Ollama). It will not function on the deployed Streamlit website.")
 
 # Fetch and validate Google API Key if Cloud Backend is active
 api_key = os.getenv("GOOGLE_API_KEY")
 if backend == "API Mode" and not api_key:
     st.sidebar.error("GOOGLE_API_KEY environment variable is missing. Please set it in your .env file.")
     st.stop()
-
-# Initialize session state variables
-if "indexed_backends" not in st.session_state:
-    st.session_state.indexed_backends = {}
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "active_backend" not in st.session_state:
-    st.session_state.active_backend = backend
-
-# Reset conversation session state if user toggles backend modes
-if st.session_state.active_backend != backend:
-    st.session_state.messages = []
-    st.session_state.active_backend = backend
 
 # Instantiate embeddings and generation pipelines
 with st.spinner("Initializing system runtime..."):
@@ -111,6 +140,8 @@ with st.spinner("Initializing system runtime..."):
             embeddings, llm = llm_providers.load_local_components()
     except Exception as err:
         st.error(str(err))
+        if backend == "Local Mode":
+            st.info("💡 **Local Mode Notice:** Local mode is designed for execution on your local PC. If you are accessing this from a deployed Streamlit website, please switch to **API Mode** instead.")
         st.stop()
 
 # Main File Ingestion Uploader
@@ -131,6 +162,8 @@ if uploaded_file:
             
         with st.spinner(f"Analyzing and indexing document for {backend}..."):
             try:
+                import time
+                start_time = time.time()
                 if backend == "Local Mode":
                     import subprocess
                     try:
@@ -140,8 +173,9 @@ if uploaded_file:
                 chunks = ingestion.process_document(target_path)
                 v_store = vectorstore.get_vector_store(backend, embeddings)
                 v_store.add_documents(chunks)
+                elapsed_time = time.time() - start_time
                 st.session_state.indexed_backends[backend] = uploaded_file.name
-                st.success(f"Successfully processed and indexed document blocks for {backend}!")
+                st.success(f"Successfully processed and indexed document blocks for {backend} in {elapsed_time:.2f} seconds!")
             except Exception as e:
                 err_msg = str(e)
                 if "429" in err_msg or "quota" in err_msg.lower():
@@ -162,6 +196,8 @@ if uploaded_file:
                 st.markdown("<br><strong>Cited References:</strong><br>", unsafe_allow_html=True)
                 for cit in msg["citations"]:
                     st.markdown(f'<span class="citation-badge">{cit}</span>', unsafe_allow_html=True)
+            if "gen_time" in msg and msg["gen_time"] is not None:
+                st.caption(f"⚡ Response generated in {msg['gen_time']:.2f} seconds")
 
     # User query chat interface
     user_query = st.chat_input("Ask a question regarding your notes...")
@@ -208,10 +244,14 @@ if uploaded_file:
                                     subprocess.run(["ollama", "stop", config.LOCAL_EMBED], capture_output=True, text=True)
                                 except Exception:
                                     pass
+                            import time
+                            start_gen = time.time()
                             raw_llm_response = llm.invoke(formatted_prompt)
+                            gen_time = time.time() - start_gen
                             final_text = getattr(raw_llm_response, 'content', str(raw_llm_response)).strip()
                             
                             st.markdown(final_text)
+                            st.caption(f"⚡ Response generated in {gen_time:.2f} seconds")
                             
                             # Filter and badge references that are actually present inside the response text
                             citations = []
@@ -237,7 +277,8 @@ if uploaded_file:
                             st.session_state.messages.append({
                                 "role": "assistant",
                                 "content": final_text,
-                                "citations": [cit.strip("()") for cit in citations]
+                                "citations": [cit.strip("()") for cit in citations],
+                                "gen_time": gen_time
                             })
                         except Exception as api_err:
                             err_msg = str(api_err)

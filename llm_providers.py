@@ -157,6 +157,29 @@ def load_local_components():
     """Instantiates and caches local embedding and generation models."""
     # Ensure custom local GGUF model is registered in Ollama
     ensure_custom_ollama_model()
+    
+    # Actively verify Ollama server connection and check for required models
+    try:
+        res = requests.get("http://localhost:11434/api/tags", timeout=5)
+        res.raise_for_status()
+        tags_data = res.json()
+        model_names = [m["name"] for m in tags_data.get("models", [])]
+        
+        # Check if local generation and embedding models are present (supporting optional ':latest' tag suffix)
+        for target_model in [config.LOCAL_LLM, config.LOCAL_EMBED]:
+            found = False
+            for name in model_names:
+                if name == target_model or name.startswith(f"{target_model}:"):
+                    found = True
+                    break
+            if not found:
+                raise ValueError(f"Required model '{target_model}' is not registered in Ollama. Please run setup_n_launch.bat or register/pull it manually.")
+                
+    except requests.exceptions.ConnectionError as e:
+        raise RuntimeError("Ollama server connection refused. Ensure Ollama app is running locally on port 11434.") from e
+    except Exception as e:
+        raise RuntimeError(f"Ollama local validation failed: {e}") from e
+
     try:
         base_embeddings = BatchedOllamaEmbeddings(model=config.LOCAL_EMBED, num_gpu=99)
         embeddings = NormalizedEmbeddings(base_embeddings)

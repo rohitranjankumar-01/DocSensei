@@ -1,16 +1,20 @@
 import os
 import shutil
 from langchain_community.vectorstores import Chroma
+import chromadb
 from chromadb.config import Settings
 import config
 
 def get_vector_store(backend_mode, embedding_function):
     """Retrieves or builds the Chroma vector database collection matching the current active backend."""
     persist_dir = config.CHROMA_API_DIR if backend_mode == "API Mode" else config.CHROMA_LOCAL_DIR
+    client = chromadb.PersistentClient(
+        path=persist_dir,
+        settings=Settings(anonymized_telemetry=False)
+    )
     return Chroma(
-        persist_directory=persist_dir,
-        embedding_function=embedding_function,
-        client_settings=Settings(anonymized_telemetry=False)
+        client=client,
+        embedding_function=embedding_function
     )
 
 def reset_collections(backend_mode, embedding_function):

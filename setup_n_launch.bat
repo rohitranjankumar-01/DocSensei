@@ -1,6 +1,6 @@
 @echo off
-echo [1/4] Creating virtual environment with Python 3.12...
-:: Force the use of Python 3.12 specifically
+echo [1/4] Creating virtual environment with Python 3.11...
+:: Force the use of Python 3.11 specifically
 py -3.11 -m venv venv
 call venv\Scripts\activate
 
