@@ -36,12 +36,37 @@ graph TD
 
 ## 📂 File Directory Layout
 
-*   `app.py`: Streamlit frontend dashboard, styling injection, and pipeline execution Orchestration.
-*   `config.py`: Threshold cutoffs, chunk sizes, and active model name declarations.
-*   `ingestion.py`: PyPDF and DOCX document processing loaders and recursive chunking.
-*   `vectorstore.py`: ChromaDB database initialization and collection purge handlers.
-*   `llm_providers.py`: Model loader instantiation for Gemini (API Mode) and Ollama (Local Mode).
-*   `prompts.py`: strict citation prompting directives and source tagging formats.
-*   `requirements.txt`: Python package dependency listings.
+```
+├── llama_model/
+│   ├── Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
+│   ├── Modelfile
+│   ├── Modelfile_embed
+│   └── nomic-embed-text.gguf
+├── README.md
+├── app.py
+├── config.py
+├── ingestion.py
+├── llm_providers.py
+├── prompts.py
+├── requirements.txt
+├── runtime.txt
+├── setup_n_launch.bat
+└── vectorstore.py
+```
+
+*   `app.py`: Streamlit frontend dashboard, custom styling injection, and pipeline execution orchestration.
+*   `config.py`: Threshold cutoffs, chunk sizes, path configurations, and model definitions.
+*   `ingestion.py`: PyPDF and DOCX document processing loaders and recursive chunking logic.
+*   `llm_providers.py`: Instantiation of API (Gemini) and Local (Ollama/llama.cpp) LLM engines.
+*   `prompts.py`: Strict instruction directives for citation grounding and answer formatting.
+*   `requirements.txt`: Python package dependencies.
+*   `runtime.txt`: Version declaration of the Python runtime.
+*   `setup_n_launch.bat`: Automated environment build and dashboard startup batch script.
+*   `vectorstore.py`: Local ChromaDB vector database creation, querying, and maintenance script.
+*   `llama_model/`: Local model repository directory.
+    *   `Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf`: Quantized local Llama 3.1 8B Instruct model.
+    *   `nomic-embed-text.gguf`: Local text embedding model.
+    *   `Modelfile` / `Modelfile_embed`: Manifest configuration files to build/import the model formats in Ollama.
 
 ---
+
