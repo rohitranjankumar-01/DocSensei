@@ -25,7 +25,7 @@ graph TD
 
 1. **"Model Switcher" Engine:** A sidebar toggle allows swapping runtime components:
    * **Local Mode:** Powered completely offline by `Ollama` using `llama3.1` and `nomic-embed-text` embeddings.
-   * **API Mode:** Powered by the `Google Gemini API` using `gemini-1.5-flash` and `gemini-embedding-001`.
+   * **API Mode:** Powered by the `Google Gemini API` using `gemini-embedding-001` for vector embedding. It includes a sub-model switcher to dynamically swap the generation LLM (supporting *Gemini 3.1 Flash Lite*, *Gemini 3.5 Flash*, *Gemini 2.5 Flash Lite*, and *Gemini 3 Flash*) without affecting or requiring re-indexing of the document vector store.
 2. **Grounded Retrieval (Anti-Hallucination Guardrails):**
    * Multi-stage safety checks prevent hallucinations.
    * A mathematical vector distance pre-flight check rejects questions whose closest matches are beyond a distance cutoff threshold.

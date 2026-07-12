@@ -72,6 +72,10 @@ st.markdown("""
         border-radius: 10px;
         padding: 1rem;
     }
+    div[data-baseweb="select"] input {
+        pointer-events: none !important;
+        caret-color: transparent !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -87,7 +91,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # Sidebar configurations panel
-st.sidebar.markdown("###Core Configuration")
+st.sidebar.markdown("### Core Configuration")
 
 # Match the radio to active_backend or let it update
 backend_options = ["API Mode", "Local Mode"]
@@ -131,11 +135,27 @@ if backend == "API Mode" and not api_key:
     st.sidebar.error("GOOGLE_API_KEY environment variable is missing. Please set it in your .env file.")
     st.stop()
 
+# Configure and select Gemini LLM model if Cloud Backend is active
+selected_api_model = None
+if backend == "API Mode":
+    model_options = list(config.AVAILABLE_GEMINI_MODELS.keys())
+    default_model = config.API_LLM
+    default_model_idx = 0
+    if default_model in model_options:
+        default_model_idx = model_options.index(default_model)
+    
+    selected_model_label = st.sidebar.selectbox(
+        "Select Gemini Model",
+        options=model_options,
+        index=default_model_idx
+    )
+    selected_api_model = config.AVAILABLE_GEMINI_MODELS[selected_model_label]
+
 # Instantiate embeddings and generation pipelines
 with st.spinner("Initializing system runtime..."):
     try:
         if backend == "API Mode":
-            embeddings, llm = llm_providers.load_api_components(api_key)
+            embeddings, llm = llm_providers.load_api_components(api_key, selected_api_model)
         else:
             embeddings, llm = llm_providers.load_local_components()
     except Exception as err:

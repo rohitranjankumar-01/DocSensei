@@ -112,12 +112,14 @@ class NormalizedEmbeddings:
         return self._normalize(vector)
 
 @st.cache_resource
-def load_api_components(api_key):
+def load_api_components(api_key, llm_model_name=None):
     """Instantiates and caches cloud-based embedding and generation models."""
+    if llm_model_name is None:
+        llm_model_name = config.API_LLM
     client = genai.Client(api_key=api_key)
     base_embeddings = GoogleGenAIEmbeddingsWrapper(client, config.API_EMBED)
     embeddings = NormalizedEmbeddings(base_embeddings)
-    llm = GoogleGenAILLMWrapper(client, config.API_LLM, temperature=0.1)
+    llm = GoogleGenAILLMWrapper(client, llm_model_name, temperature=0.1)
     return embeddings, llm
 
 def ensure_custom_ollama_model():

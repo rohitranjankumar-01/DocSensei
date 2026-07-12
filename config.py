@@ -22,3 +22,11 @@ LOCAL_LLM = "doc-sensei-llama3.1"
 LOCAL_EMBED = "doc-sensei-nomic-embed-text"
 API_LLM = "gemini-3.1-flash-lite"
 API_EMBED = "models/gemini-embedding-001"
+
+# --- Dynamic Gemini Models Configuration ---
+AVAILABLE_GEMINI_MODELS = {
+    "Gemini 3.1 Flash Lite": "gemini-3.1-flash-lite",
+    "Gemini 3.5 Flash": "gemini-3.5-flash",
+    "Gemini 2.5 Flash Lite": "gemini-2.5-flash-lite",
+    "Gemini 3 Flash": "gemini-3-flash",
+}
