@@ -70,3 +70,7 @@ graph TD
 
 ---
 
+## How to start?
+Just run the "setup_n_launch.bat" file to start. (Have a Active Internet connection to download the dependencies.)
+
+---
