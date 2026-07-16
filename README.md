@@ -15,7 +15,7 @@ graph TD
     Selector -->|Constructs Prompts & Query| LangChain[LangChain Pipeline]
     LangChain -->|Retrieves Chunks with Scores| ChromaDB[ChromaDB Vector Store]
     ChromaDB -->|Returns Context Chunks| LangChain
-    LangChain -->|Passes Prompt + Guardrails| LLM[LLM Generator]
+    LangChain -->|Passes Prompt + Guardrails| LLM[LLM]
     LLM -->|Synthesizes Grounded Answer| Output[Output UI Console]
 ```
 
@@ -70,7 +70,43 @@ graph TD
 
 ---
 
-## How to start?
-Just run the "setup_n_launch.bat" file to start. (Have a Active Internet connection to download the dependencies.)
+## 🚀 Quick Start Guide
+
+You can run DocSensei in either **API Mode (Cloud)** or **Local Mode (Offline)**. Follow the steps below to configure your environment and launch the application.
+
+### 📋 Prerequisites
+
+1. **Python 3.11:** Ensure Python 3.11 is installed on your system. The launch script specifically runs `py -3.11` to build the environment.
+2. **Active Internet Connection:** Required for the first run to build the virtual environment and install dependencies.
 
 ---
+
+### ⚙️ Configuration
+
+#### Option A: API Mode (Google Gemini API) — *Recommended for instant setup*
+1. Obtain an API key from [Google AI Studio](https://aistudio.google.com/).
+2. Create a `.env` file in the root directory of this project.
+3. Define your API key:
+   ```env
+   GOOGLE_API_KEY=your_gemini_api_key_here
+   ```
+
+#### Option B: Local Mode (Ollama) — *Completely offline*
+1. Install [Ollama](https://ollama.com/) on your local machine.
+2. Ensure the Ollama background service is running (accessible at `http://localhost:11434`).
+3. Place the following quantized model files inside the `llama_model/` directory:
+   * `Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf` (Local LLM)
+   * `nomic-embed-text.gguf` (Local Embeddings)
+4. The application will automatically register these custom models (`doc-sensei-llama3.1` and `doc-sensei-nomic-embed-text`) inside Ollama upon switching to Local Mode.
+
+---
+
+### 🏎️ Launching the Application
+
+1. Double-click the `setup_n_launch.bat` batch script in the root directory (or execute it from a terminal).
+2. The batch script will automatically:
+   * Create a Python 3.11 virtual environment (`venv`).
+   * Upgrade packaging utilities (`pip`, `setuptools`, `wheel`).
+   * Install all requirements listed in `requirements.txt`.
+   * Start the Streamlit application interface.
+3. Streamlit will launch and open your default browser to `http://localhost:8501`.
